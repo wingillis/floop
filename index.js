@@ -1,43 +1,39 @@
-const fs = require('fs');
-const pdf = require('pdf-parse');
+const getDOIandTitle = require('./lib/pdfs.js')
+const assert = require('assert');
 const request = require('superagent');
 
 // link to the crossref api
 const crossref = 'https://api.crossref.org/works/';
 
-// I have a file on my desktop for testing
-let file = '/Users/wgillis/Desktop/1-s2.0-S0959438808000767-main.pdf'
-// contains the pdf file in memory now
 
-if (process.argv.length > 2) {
-	file = process.argv[2];
-	console.log(file);
+async function getDataFromCrossref(doi) {
+	return new Promise((resolve, reject) => {
+			request.get(crossref + doi).end((err, res) => {
+			let msg = res.body.message
+			// the paper's title
+			let worktitle = msg.title[0]
+			let publisher = msg.publisher
+			// console.log(msg)
+			resolve({
+				title: worktitle,
+				publisher: publisher,
+				year: msg.issued['date-parts'][0][0],
+				authors: msg.author
+			})
+		})
+	})
 }
 
-let databuffer = fs.readFileSync(file);
 
-// parse the pdf then ...
-pdf(databuffer).then(function(data) {
-	// print the information about the pdf, i.e. title, etc.
-	console.log(data.info);
-	let title = data.info.Title;
-	if (title.includes('doi')) {
-		let re = /doi:/;
-		// remove doi from the title name
-		doi = title.replace(re, '');
-		console.log('Searching for title');
-		// use crossref api to get actual pdf title name
-		request.get(crossref + doi).end((err, res) => {
-			let msg = res.body.message;
-			// the paper's title
-			let worktitle = msg.title[0];
-			console.log(worktitle);
-			// this is everything that crossref sends back
-			console.log(msg);
-			// this is the year the paper was published
-			console.log(msg.issued['date-parts'][0][0]);
-		});
-	} else {
-		console.log(title);
-	}
-});
+async function main() {
+	// put in everything that I'll use to parse stuff here
+	assert(process.argv.length > 2, 'Please specify an input file')
+	let file = process.argv[2]
+	console.log(file)
+	let d = await getDOIandTitle(file)
+	let thing = await getDataFromCrossref(d.doi)
+	console.log(`title: "${d.title}"`)
+	console.log(thing)
+}
+
+main()

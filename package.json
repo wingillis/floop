@@ -10,10 +10,14 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "pdf-parse": "^1.1.1",
-    "superagent": "^4.1.0"
+    "lodash": "^4.17.11",
+    "pdfjs-dist": "^2.0.943",
+    "superagent": "^4.1.0",
+    "vue": "^2.6.7"
   },
   "devDependencies": {
-    "electron": "^4.0.5"
+    "electron": "^4.0.5",
+    "eslint": "^5.14.1",
+    "webpack": "^4.29.5"
   }
 }
