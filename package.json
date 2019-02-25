@@ -1,5 +1,6 @@
 {
   "name": "pdf-organizer",
+  "repository": "https://github.com/wingillis/floop.git",
   "version": "1.0.0",
   "description": "an app designed to make organization of PDFs extremely easy",
   "main": "index.js",
@@ -11,5 +12,8 @@
   "dependencies": {
     "pdf-parse": "^1.1.1",
     "superagent": "^4.1.0"
+  },
+  "devDependencies": {
+    "electron": "^4.0.5"
   }
 }

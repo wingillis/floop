@@ -8,9 +8,13 @@ const crossref = 'https://api.crossref.org/works/';
 // I have a file on my desktop for testing
 let file = '/Users/wgillis/Desktop/1-s2.0-S0959438808000767-main.pdf'
 // contains the pdf file in memory now
-let databuffer = fs.readFileSync(file);
 
-//console.log(process.argv)
+if (process.argv.length > 2) {
+	file = process.argv[2];
+	console.log(file);
+}
+
+let databuffer = fs.readFileSync(file);
 
 // parse the pdf then ...
 pdf(databuffer).then(function(data) {
@@ -33,5 +37,7 @@ pdf(databuffer).then(function(data) {
 			// this is the year the paper was published
 			console.log(msg.issued['date-parts'][0][0]);
 		});
+	} else {
+		console.log(title);
 	}
 });
