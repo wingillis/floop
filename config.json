@@ -2,5 +2,7 @@
   "watch": "/Users/wgillis/db-hms/lab-datta/papers to read",
   "move": false,
   "outputDirectory": "/Users/wgillis/db-hms/library/floop",
-  "naming": ["title", "journal", "year"]
+  "naming": ["title", "journal", "year"],
+  "scanEvery": 0.1,
+  "dbDirectory": "/Users/wgillis/.floop"
 }
