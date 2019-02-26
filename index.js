@@ -20,7 +20,7 @@ function getDataFromCrossref(doi) {
       // console.log(msg)
       resolve({
         title: worktitle,
-        publisher: publisher,
+        journal: publisher,
         year: msg.issued['date-parts'][0][0],
         authors: msg.author,
         doi: doi
@@ -59,7 +59,8 @@ async function watchLoop (config) {
     }
     if (data.doi != null) {
       let crossref_data = getDataFromCrossref(data.doi)
-      // eventually, search the mini json db for entries matching title, doi or 
+      // eventually, search the mini json db for entries matching title, doi, etc
+      // also rename file based on config
       // io.moveItem(files[f], join(config.outputDirectory, 'untagged'))
       // console.log(crossref_data)
     } else if (data.doi == null && data.title == null) {
