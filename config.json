@@ -1,5 +1,6 @@
 {
-  "inputs": "/Users/wgillis/db-hms/lab-datta/papers to read",
+  "watch": "/Users/wgillis/db-hms/lab-datta/papers to read",
   "move": false,
-  "saveDirectory": "/Users/wgillis/db-hms/library/floop"
+  "outputDirectory": "/Users/wgillis/db-hms/library/floop",
+  "naming": ["title", "journal", "year"]
 }
