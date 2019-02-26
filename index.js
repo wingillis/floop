@@ -2,7 +2,8 @@ const getDOIandTitle = require('./lib/pdfs.js')
 const io = require('./lib/io.js')
 const assert = require('assert')
 const request = require('superagent')
-const join = require('path').join
+const path = require('path')
+const _ = require('lodash')
 
 // load in the config file
 
@@ -14,10 +15,13 @@ function getDataFromCrossref(doi) {
       // request.get(crossref + doi).end((err, res) => {
       request.get(crossref + doi).end((err, res) => {
       let msg = res.body.message
+      // console.log(msg)
       // the paper's title
       let worktitle = msg.title[0]
-      let publisher = msg.publisher
-      // console.log(msg)
+      let publisher = msg['container-title']
+      if (_.isArray(publisher)) {
+        publisher = _.first(publisher)
+      }
       resolve({
         title: worktitle,
         journal: publisher,
@@ -58,24 +62,22 @@ async function watchLoop (config) {
       data.title = null
     }
     if (data.doi != null) {
-      let crossref_data = getDataFromCrossref(data.doi)
+      data = await getDataFromCrossref(data.doi)
       // eventually, search the mini json db for entries matching title, doi, etc
       // also rename file based on config
-      // io.moveItem(files[f], join(config.outputDirectory, 'untagged'))
-      // console.log(crossref_data)
+      let new_name = io.renameFromSchema(data, config.naming, config.removeSpaces)
+      // move to the untagged dir
+      io.moveItem(files[f], path.join(config.outputDirectory, 'untagged', new_name))
+      console.log(new_name)
     } else if (data.doi == null && data.title == null) {
       // move these files to an 'unprocessed' folder
-      io.moveItem(files[f], join(config.outputDirectory, 'unprocessed'))
+      io.moveItem(files[f], path.join(config.outputDirectory, 'unprocessed', path.basename(files[f])))
+    } else {
+      let new_name = io.renameFromSchema(data, ['title'], config.removeSpaces)
+      console.log(new_name)
+      io.moveItem(files[f], path.join(config.outputDirectory, 'untagged', new_name))
     }
   }
-  // files.every((f) => {
-  //   console.log(data)
-  //   let crossref_data = getCrossref(data.doi)
-  //   // eventually move files into the output directory
-  // })
-  // _.map(files, (f) => {
-  //   io.moveItem(f, config.outputDirectory)
-  // })
 }
 
 
