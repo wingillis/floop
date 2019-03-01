@@ -3,9 +3,13 @@ const io = require('./lib/io.js')
 const assert = require('assert')
 const request = require('superagent')
 const path = require('path')
+const PouchDB = require('pouchdb')
+const join = path.join
+const fs = require('fs')
 const _ = require('lodash')
 
-// load in the config file
+// setup pouchdb
+var db
 
 // link to the crossref api
 const crossref = 'https://api.crossref.org/works/';
@@ -48,48 +52,71 @@ async function getDOIFromPII(pii) {
   })
 }
 
-async function getCrossref(doi) {
-  return await getDataFromCrossref(doi)
+async function processFile (fname, config) {
+  let data = await getDOIandTitle(fname)
+  if (data.title === 'pii') {
+    data.doi = await getDOIFromPII(data.doi)
+    data.title = null
+  }
+  if (data.doi != null) {
+    data = _.assign(data, await getDataFromCrossref(data.doi))
+    // eventually, search the mini json db for entries matching title, doi, etc
+    // also rename file based on config
+    let new_name = io.renameFromSchema(data, config.naming, config.removeSpaces)
+    // move to the untagged dir
+    data.path = join(config.outputDirectory, 'untagged', new_name)
+    data.tags = ['untagged']
+    io.moveItem(fname, data.path)
+  } else if (data.doi == null && data.title == null) {
+    // move these files to an 'unprocessed' folder
+    data.path = join(config.outputDirectory, 'unprocessed', path.basename(fname))
+    data.tags = ['unprocessed']
+    io.moveItem(fname, data.path)
+  } else {
+    let new_name = io.renameFromSchema(data, ['title'], config.removeSpaces)
+    data.path = join(config.outputDirectory, 'untagged', new_name)
+    data.tags = ['untagged']
+    io.moveItem(fname, data.path)
+  }
+  return data
+}
+
+function setupDB(config) {
+  if (!fs.existsSync(config.dbDirectory)) {
+    fs.mkdirSync(config.dbDirectory)
+  }
+  return new PouchDB(join(config.dbDirectory, 'pdf-files.db'))
 }
 
 async function watchLoop (config) {
   let files = io.scanFolder(config.watch)
-  for (let f in files) {
-    let data = await getDOIandTitle(files[f])
-
-    if (data.title === 'pii') {
-      data.doi = await getDOIFromPII(data.doi)
-      data.title = null
-    }
-    if (data.doi != null) {
-      data = await getDataFromCrossref(data.doi)
-      // eventually, search the mini json db for entries matching title, doi, etc
-      // also rename file based on config
-      let new_name = io.renameFromSchema(data, config.naming, config.removeSpaces)
-      // move to the untagged dir
-      io.moveItem(files[f], path.join(config.outputDirectory, 'untagged', new_name))
-      console.log(new_name)
-    } else if (data.doi == null && data.title == null) {
-      // move these files to an 'unprocessed' folder
-      io.moveItem(files[f], path.join(config.outputDirectory, 'unprocessed', path.basename(files[f])))
-    } else {
-      let new_name = io.renameFromSchema(data, ['title'], config.removeSpaces)
-      console.log(new_name)
-      io.moveItem(files[f], path.join(config.outputDirectory, 'untagged', new_name))
-    }
+  // this makes the api calls async and faster
+  let file_data = await Promise.all(files.map(async fname => {
+    return processFile(fname, config)
+  }))
+  file_data.map((v) => {
+    v._id = new Date().toJSON()
+  })
+  // TODO: do something with the file data here in the db
+  if (db == null) {
+    db = setupDB(config)
   }
+  db.bulkDocs(file_data)
+
+  return file_data
 }
 
 
-async function main() {
+async function watching () {
   // put in everything that I'll use to parse stuff here
   const config = require('./config.json')
+  db = setupDB(config)
   config.scanEvery = config.scanEvery * 1000 * 60
-  watchLoop(config)
-
+  let data = await watchLoop(config)
+  console.log(data)
   // this is the watching interval
   // let intervalID = setInterval(watchLoop, config.scanEvery, config)
 
 }
 
-main()
+watching()
