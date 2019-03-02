@@ -6,7 +6,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "ui": "electron ui/main.js"
+    "ui": "electron ui/main.js",
+    "build": "webpack"
   },
   "author": "",
   "license": "ISC",
@@ -18,11 +19,18 @@
     "request": "^2.88.0",
     "request-promise-native": "^1.0.7",
     "superagent": "^4.1.0",
-    "vue": "^2.6.7"
+    "vue": "^2.6.8"
   },
   "devDependencies": {
+    "css-loader": "^2.1.0",
     "electron": "^4.0.5",
     "eslint": "^5.14.1",
-    "webpack": "^4.29.5"
+    "node-sass": "^4.11.0",
+    "pug": "^2.0.3",
+    "sass-loader": "^7.1.0",
+    "style-loader": "^0.23.1",
+    "vue-loader": "^15.7.0",
+    "vue-template-compiler": "^2.6.8",
+    "webpack": "^4.29.6"
   }
 }
