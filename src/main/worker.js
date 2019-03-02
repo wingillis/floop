@@ -1,5 +1,5 @@
-const getDOIandTitle = require('./lib/pdfs.js')
-const io = require('./lib/io.js')
+const getDOIandTitle = require('./pdfs.js')
+const io = require('./io.js')
 const assert = require('assert')
 const request = require('superagent')
 const path = require('path')
