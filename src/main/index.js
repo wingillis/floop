@@ -52,14 +52,17 @@ app.on('activate', () => {
 })
 
 ipcMain.on('refresh', (event, arg) => {
-  // do something with the event
+  // check files
+  if (userConfig != null) {
+    let fileData = worker.processFolder(userConfig)
+    database.bulkDocs(fileData)
+  }
 })
 
 ipcMain.on('load-db', (event, arg) => {
   let configPath = path.resolve(path.join(__dirname, '..', '..', 'config.json'))
   userConfig = JSON.parse(fs.readFileSync(configPath))
   database = worker.setupDB(userConfig)
-  console.log(database)
   event.sender.send('on-load-db', 'done')
 })
 

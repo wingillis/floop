@@ -33,10 +33,13 @@ async function getDOIFromPII (pii) {
   // replace text that won't be used in html search
   pii = pii.replace(/[()-]/g, '')
   try {
-    let resp = await request.get(crossref).query({query: pii})
-    console.log(resp)
-    return resp
-    // TODO: return the DOI from this file
+    let res = await request.get(crossref).query({query: pii})
+    let msg = res.body.message
+    if (msg.items.length === 1) {
+      return msg.items[0].DOI
+    } else {
+      throw new Error('cannot handle multiple dois')
+    }
   } catch (error) {
     console.error(error)
     throw new Error(error)
@@ -79,7 +82,7 @@ function setupDB (config) {
   return new PouchDB(join(config.dbDirectory, 'pdf-files.db'))
 }
 
-async function watchLoop (config) {
+async function processFolder (config) {
   let files = io.scanFolder(config.watch)
   // this makes the api calls async and faster
   let fileData = await Promise.all(files.map(async fname => {
@@ -90,14 +93,11 @@ async function watchLoop (config) {
     v._id = v.md5
   })
   // TODO: do something with the file data here in the db
-  if (db == null) {
-    db = setupDB(config)
-  }
-  db.bulkDocs(fileData)
-
   return fileData
 }
 
 export default {
-  setupDB
+  setupDB,
+  processFile,
+  processFolder
 }

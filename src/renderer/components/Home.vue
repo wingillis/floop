@@ -1,21 +1,25 @@
 <template lang="pug">
-  div
-    h1 {{ thing }}  
+div
+  pdf-file(v-for="pdf in pdfs",
+           v-bind:pdf="pdf",
+           v-bind:key="pdf._id")
 </template>
 
 <script>
+import PDFFile from './Home/PDFFile'
 
 export default {
   name: 'home',
+  components: { PDFFile },
   data () {
     return {
-      thing: 'ready?'
+      thing: 'ready?',
+      pdfs: []
     }
   },
-  mounted: function () {
-    const vue = this
+  mounted () {
     this.$electron.ipcRenderer.on('on-load-db', (event, args) => {
-      vue.thing = 'loaded!'
+      this.thing = 'loaded!'
     })
     this.$electron.ipcRenderer.send('load-db')
   }

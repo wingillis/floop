@@ -10,7 +10,7 @@ function scanFolder (folder) {
   items = items.filter((val) => {
     return fs.lstatSync(join(folder, val)).isFile()
   }).filter((val) => {
-    return val.toLowerCase().search(/pdf$/) != -1
+    return val.toLowerCase().search(/pdf$/) !== -1
   })
   items = items.map((val) => {
     return join(folder, val)
@@ -21,9 +21,9 @@ function scanFolder (folder) {
 function updateVersion (fname, version = 1) {
   let ext = path.extname(fname)
   let base = path.basename(fname, ext)
-  let new_fname = join(path.dirname(fname), base + `.${version}${ext}`)
-  if (!fs.existsSync(new_fname)) {
-    return new_fname
+  let newFname = join(path.dirname(fname), base + `.${version}${ext}`)
+  if (!fs.existsSync(newFname)) {
+    return newFname
   } else {
     return updateVersion(fname, version + 1)
   }
@@ -31,16 +31,16 @@ function updateVersion (fname, version = 1) {
 
 // moves file to new directory, and makes the directory in case it doesn't exist
 async function moveItem (from, to) {
-  let to_dir = path.dirname(to)
-  if (!fs.existsSync(to_dir)) {
-    console.log(`making dir ${to_dir}`)
-    fs.mkdirSync(to_dir, {recursive: true})
+  let toDir = path.dirname(to)
+  if (!fs.existsSync(toDir)) {
+    console.log(`making dir ${toDir}`)
+    fs.mkdirSync(toDir, {recursive: true})
   }
   if (fs.existsSync(to)) {
     // continue in HERE
-    let from_hash = md5(from)
-    let to_hash = md5(to)
-    if (await from_hash !== await to_hash) {
+    let fromHash = md5(from)
+    let toHash = md5(to)
+    if (await fromHash !== await toHash) {
       // update `to` filename
       to = updateVersion(to)
     } else {
@@ -54,7 +54,7 @@ async function moveItem (from, to) {
 }
 
 // rename file based on keys to call from specified in the json config
-function renameFromSchema (data, schema, remove_spaces = false) {
+function renameFromSchema (data, schema, removeSpaces = false) {
   // remove illegal filename characters
   let fname = _.join(_.filter(_.map(schema, (v) => {
     return data[v]
@@ -63,13 +63,13 @@ function renameFromSchema (data, schema, remove_spaces = false) {
   }), ' - ')
   // removes illegal characters from pathname
   fname = fname.replace(/[/\\?%*:|"<>]/g, '-') + '.pdf'
-  if (remove_spaces) {
+  if (removeSpaces) {
     fname = fname.replace(' ', '-')
   }
   return fname
 }
 
-module.exports = {
+export default {
   scanFolder,
   moveItem,
   renameFromSchema
