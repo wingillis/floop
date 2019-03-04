@@ -5,7 +5,7 @@ const md5 = require('md5-file/promise')
 const join = path.join
 
 // find all items in `folder` that are pdfs
-function scanFolder(folder) {
+function scanFolder (folder) {
   let items = fs.readdirSync(folder)
   items = items.filter((val) => {
     return fs.lstatSync(join(folder, val)).isFile()
@@ -18,19 +18,19 @@ function scanFolder(folder) {
   return items
 }
 
-function updateVersion(fname, version=1) {
+function updateVersion (fname, version = 1) {
   let ext = path.extname(fname)
   let base = path.basename(fname, ext)
   let new_fname = join(path.dirname(fname), base + `.${version}${ext}`)
   if (!fs.existsSync(new_fname)) {
     return new_fname
   } else {
-    return updateVersion(fname, version+1)
+    return updateVersion(fname, version + 1)
   }
 }
 
 // moves file to new directory, and makes the directory in case it doesn't exist
-async function moveItem(from, to) {
+async function moveItem (from, to) {
   let to_dir = path.dirname(to)
   if (!fs.existsSync(to_dir)) {
     console.log(`making dir ${to_dir}`)
@@ -54,7 +54,7 @@ async function moveItem(from, to) {
 }
 
 // rename file based on keys to call from specified in the json config
-function renameFromSchema(data, schema, remove_spaces=false) {
+function renameFromSchema (data, schema, remove_spaces = false) {
   // remove illegal filename characters
   let fname = _.join(_.filter(_.map(schema, (v) => {
     return data[v]

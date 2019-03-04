@@ -3,7 +3,7 @@ const fs = require('fs')
 const _ = require('lodash')
 const md5 = require('md5-file/promise')
 
-function flatten_to_entries(obj) {
+function flatten_to_entries (obj) {
   let entries = _.entries(obj)
   let objs = _.filter(entries, (v) => {
     return _.isObject(v[1])
@@ -11,13 +11,13 @@ function flatten_to_entries(obj) {
   entries = _.filter(entries, (v) => {
     return !_.isObject(v[1])
   })
-  for (let i=0; i < objs.length; i++) {
+  for (let i = 0; i < objs.length; i++) {
     entries = _.concat(entries, flatten_to_entries(objs[i][1]))
   }
   return entries
 }
 
-function searchForDOI(obj) {
+function searchForDOI (obj) {
   const entries = flatten_to_entries(obj)
 
   return entries.filter(([key, val]) => {
@@ -25,7 +25,7 @@ function searchForDOI(obj) {
   })
 }
 
-function searchForTitle(obj) {
+function searchForTitle (obj) {
   const entries = flatten_to_entries(obj)
 
   return entries.filter(([entry, val]) => {
@@ -34,7 +34,7 @@ function searchForTitle(obj) {
 }
 
 // remove doi from title section and return valid titles
-function cleanTitles(titles) {
+function cleanTitles (titles) {
   // remove dois
   titles = _.filter(titles, ([key, val]) => {
     return val.search(/doi:/) == -1
@@ -62,7 +62,7 @@ function cleanTitles(titles) {
 }
 
 // remove redundant dois from list
-function cleanDOIs(dois) {
+function cleanDOIs (dois) {
   let matches = _.map(dois, ([key, val]) => {
     if (key.search(/doi/) != -1) {
       return val
@@ -77,7 +77,8 @@ function cleanDOIs(dois) {
   return _.uniq(matches)
 }
 
-async function getDOIandTitle(fpath) {
+async function getDOIandTitle (fpath) {
+  let hash = md5(fpath)
   let data = await pdf.getDocument(fpath)
   let md = await data.getMetadata()
   // console.log(md)
@@ -100,14 +101,11 @@ async function getDOIandTitle(fpath) {
     title = 'pii'
   }
 
-  hash = await md5(fpath)
-
   return {
     doi,
     title,
-    md5: hash
+    md5: await hash
   }
-
 }
 
 module.exports = getDOIandTitle

@@ -1,0 +1,103 @@
+'use strict'
+
+import fs from 'fs'
+import { path, join } from 'path'
+import * as request from 'superagent'
+
+const getDOIandTitle = require('./pdfs.js')
+const io = require('./io.js')
+const PouchDB = require('pouchdb')
+const _ = require('lodash')
+
+// link to the crossref api
+const crossref = 'https://api.crossref.org/works'
+// const crossrefQuery = 'https://api.crossref.org/works?query='
+
+async function getDataFromCrossref (doi) {
+  let res = await request.get(`${crossref}/${doi}`)
+  let msg = res.body.message
+  let publisher = msg['container-title']
+  if (_.isArray(publisher)) {
+    publisher = _.first(publisher)
+  }
+  return {
+    title: msg.title[0],
+    journal: publisher,
+    year: msg.issued['date-parts'][0][0],
+    authors: msg.author,
+    doi: doi
+  }
+}
+
+async function getDOIFromPII (pii) {
+  // replace text that won't be used in html search
+  pii = pii.replace(/[()-]/g, '')
+  try {
+    let resp = await request.get(crossref).query({query: pii})
+    console.log(resp)
+    return resp
+    // TODO: return the DOI from this file
+  } catch (error) {
+    console.error(error)
+    throw new Error(error)
+  }
+}
+
+async function processFile (fname, config) {
+  let data = await getDOIandTitle(fname)
+  if (data.title === 'pii') {
+    data.doi = await getDOIFromPII(data.doi)
+    data.title = null
+  }
+  if (data.doi != null) {
+    data = _.assign(data, await getDataFromCrossref(data.doi))
+    // eventually, search the mini json db for entries matching title, doi, etc
+    // also rename file based on config
+    let newName = io.renameFromSchema(data, config.naming, config.removeSpaces)
+    // move to the untagged dir
+    data.path = join(config.outputDirectory, 'untagged', newName)
+    data.tags = ['untagged']
+    io.moveItem(fname, data.path)
+  } else if (data.doi == null && data.title == null) {
+    // move these files to an 'unprocessed' folder
+    data.path = join(config.outputDirectory, 'unprocessed', path.basename(fname))
+    data.tags = ['unprocessed']
+    io.moveItem(fname, data.path)
+  } else {
+    let newName = io.renameFromSchema(data, ['title'], config.removeSpaces)
+    data.path = join(config.outputDirectory, 'untagged', newName)
+    data.tags = ['untagged']
+    io.moveItem(fname, data.path)
+  }
+  return data
+}
+
+function setupDB (config) {
+  if (!fs.existsSync(config.dbDirectory)) {
+    fs.mkdirSync(config.dbDirectory)
+  }
+  return new PouchDB(join(config.dbDirectory, 'pdf-files.db'))
+}
+
+async function watchLoop (config) {
+  let files = io.scanFolder(config.watch)
+  // this makes the api calls async and faster
+  let fileData = await Promise.all(files.map(async fname => {
+    return processFile(fname, config)
+  }))
+  fileData.map((v) => {
+    v.created_date = new Date().toJSON()
+    v._id = v.md5
+  })
+  // TODO: do something with the file data here in the db
+  if (db == null) {
+    db = setupDB(config)
+  }
+  db.bulkDocs(fileData)
+
+  return fileData
+}
+
+export default {
+  setupDB
+}

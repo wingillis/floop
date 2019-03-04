@@ -1,16 +1,21 @@
 'use strict'
 
-import { app, BrowserWindow } from 'electron'
+import { app, BrowserWindow, ipcMain } from 'electron'
+import path from 'path'
+import fs from 'fs'
+import worker from './lib/worker'
 
 /**
  * Set `__static` path to static files in production
  * https://simulatedgreg.gitbooks.io/electron-vue/content/en/using-static-assets.html
  */
 if (process.env.NODE_ENV !== 'development') {
-  global.__static = require('path').join(__dirname, '/static').replace(/\\/g, '\\\\')
+  global.__static = path.join(__dirname, '/static').replace(/\\/g, '\\\\')
 }
 
 let mainWindow
+let database, userConfig
+
 const winURL = process.env.NODE_ENV === 'development'
   ? `http://localhost:9080`
   : `file://${__dirname}/index.html`
@@ -44,6 +49,18 @@ app.on('activate', () => {
   if (mainWindow === null) {
     createWindow()
   }
+})
+
+ipcMain.on('refresh', (event, arg) => {
+  // do something with the event
+})
+
+ipcMain.on('load-db', (event, arg) => {
+  let configPath = path.resolve(path.join(__dirname, '..', '..', 'config.json'))
+  userConfig = JSON.parse(fs.readFileSync(configPath))
+  database = worker.setupDB(userConfig)
+  console.log(database)
+  event.sender.send('on-load-db', 'done')
 })
 
 /**
