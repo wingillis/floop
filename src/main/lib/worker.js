@@ -61,17 +61,20 @@ async function processFile (fname, config) {
     // move to the untagged dir
     data.path = join(config.outputDirectory, 'untagged', newName)
     data.tags = ['untagged']
-    io.moveItem(fname, data.path)
+    io.moveItem(fname, data.path, config.move)
   } else if (data.doi == null && data.title == null) {
     // move these files to an 'unprocessed' folder
     data.path = join(config.outputDirectory, 'unprocessed', path.basename(fname))
     data.tags = ['unprocessed']
-    io.moveItem(fname, data.path)
+    io.moveItem(fname, data.path, config.move)
   } else {
     let newName = io.renameFromSchema(data, ['title'], config.removeSpaces)
     data.path = join(config.outputDirectory, 'untagged', newName)
     data.tags = ['untagged']
-    io.moveItem(fname, data.path)
+    io.moveItem(fname, data.path, config.move)
+  }
+  if (data.title == null) {
+    data.title = path.basename(data.path.toLowerCase(), '.pdf')
   }
   return data
 }

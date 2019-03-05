@@ -36,25 +36,34 @@ async function checkHash (f1, f2) {
 }
 
 // moves file to new directory, and makes the directory in case it doesn't exist
-async function moveItem (from, to) {
+async function moveItem (from, to, move = false) {
   let toDir = path.dirname(to)
+  // make the copy directory
   if (!fs.existsSync(toDir)) {
     console.log(`making dir ${toDir}`)
     fs.mkdirSync(toDir, {recursive: true})
   }
-  if (fs.existsSync(to)) {
-    // continue in HERE
-    if (!await checkHash(from, to)) {
-      // update `to` filename
-      to = updateVersion(to)
-    } else {
+  // if file exists, check if it's the same as the file already present
+  if (fs.existsSync(to) && !await checkHash(from, to)) {
+    // if the hash's aren't the same, they are different files, so we should
+    // update the version number
+    to = await updateVersion(to)
+    if (fs.existsSync(to)) {
       // delete file and recopy
       fs.unlinkSync(to)
     }
+  } else {
+    fs.unlinkSync(to)
   }
-  // after checking for duplicates, I can copy the file in peace
-  fs.copyFileSync(from, to, fs.constants.COPYFILE_EXCL)
-  // console.log(`copied file ${from} to ${to}`)
+  // move file if move flag set to true else copy it
+  if (move) {
+    fs.renameSync(from, to)
+  } else {
+    // after checking for duplicates, I can copy the file in peace
+    // don't overwrite the file if it's already present
+    fs.copyFileSync(from, to, fs.constants.COPYFILE_EXCL)
+    // console.log(`copied file ${from} to ${to}`)
+  }
 }
 
 // rename file based on keys to call from specified in the json config

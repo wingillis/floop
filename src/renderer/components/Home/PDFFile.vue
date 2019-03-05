@@ -3,9 +3,10 @@ tr.shade
   td {{ pdf.title }}
   td {{ pdf.journal }}
   td {{ authors }}
+  //- tag section
   td(v-on:dblclick="edit")
     div(v-if="editing")
-      textarea(v-model="tags", v-on:keydown.enter="saveAndClose", cols=9)
+      textarea(v-model="tags", v-on:keydown.enter="saveTag", cols=9)
     div(v-else) {{ pdf.tags.join(', ')}}
 </template>
 
@@ -40,9 +41,10 @@ export default {
     edit () {
       this.editing = true
     },
-    saveAndClose () {
+    saveTag () {
       this.editing = false
       // send event to main process to update the database
+      // this.$electron.ipcRenderer.send('update-tag', this.pdf)
     }
   }
 }

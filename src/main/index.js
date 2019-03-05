@@ -79,6 +79,14 @@ async function updateFiles (config) {
     mainWindow.webContents.send('file-update', files.rows)
   }
 }
+
+ipcMain.on('update-tag', async (event, arg) => {
+  // update doc in the database
+  // arg should contain all relevant metadata to successfully update the
+  // doc
+  await database.put({_id: arg._id, _rev: arg._rev, tags: arg.tags})
+  // now move file around based on tags
+})
 /**
  * Auto Updater
  *
