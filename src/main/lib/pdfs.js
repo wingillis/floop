@@ -107,6 +107,6 @@ async function getDOIandTitle (fpath) {
   }
 }
 
-export default {
+export {
   getDOIandTitle
 }

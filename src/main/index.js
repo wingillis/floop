@@ -14,7 +14,7 @@ if (process.env.NODE_ENV !== 'development') {
 }
 
 let mainWindow
-let database, userConfig
+let database, userConfig, workerID
 
 const winURL = process.env.NODE_ENV === 'development'
   ? `http://localhost:9080`
@@ -27,13 +27,15 @@ function createWindow () {
   mainWindow = new BrowserWindow({
     height: 563,
     useContentSize: true,
-    width: 1000
+    width: 1200
   })
 
   mainWindow.loadURL(winURL)
 
   mainWindow.on('closed', () => {
     mainWindow = null
+    clearInterval(workerID)
+    database.close()
   })
 }
 
@@ -42,6 +44,7 @@ app.on('ready', createWindow)
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit()
+    database.close()
   }
 })
 
@@ -51,21 +54,31 @@ app.on('activate', () => {
   }
 })
 
-ipcMain.on('refresh', (event, arg) => {
+ipcMain.on('refresh', async (event, arg) => {
   // check files
   if (userConfig != null) {
-    let fileData = worker.processFolder(userConfig)
+    let fileData = await worker.processFolder(userConfig)
     database.bulkDocs(fileData)
   }
 })
 
-ipcMain.on('load-db', (event, arg) => {
+ipcMain.on('load-db', async (event, arg) => {
   let configPath = path.resolve(path.join(__dirname, '..', '..', 'config.json'))
   userConfig = JSON.parse(fs.readFileSync(configPath))
   database = worker.setupDB(userConfig)
-  event.sender.send('on-load-db', 'done')
+  workerID = setInterval(updateFiles, userConfig.scanEvery * 1000 * 60, userConfig)
+  let files = await database.allDocs({include_docs: true})
+  event.sender.send('on-load-db', files.rows)
 })
 
+async function updateFiles (config) {
+  if (userConfig != null) {
+    let fileData = await worker.processFolder(config)
+    await database.bulkDocs(fileData)
+    let files = await database.allDocs({include_docs: true})
+    mainWindow.webContents.send('file-update', files.rows)
+  }
+}
 /**
  * Auto Updater
  *

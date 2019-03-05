@@ -60,6 +60,7 @@
     "md5-file": "^4.0.0",
     "pdfjs-dist": "^2.0.943",
     "pouchdb": "^7.0.0",
+    "purecss": "^1.0.0",
     "request": "^2.88.0",
     "request-promise-native": "^1.0.7",
     "superagent": "^4.1.0",

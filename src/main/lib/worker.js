@@ -1,11 +1,12 @@
 'use strict'
 
 import fs from 'fs'
-import { path, join } from 'path'
+import path from 'path'
 import * as request from 'superagent'
+import io from './io'
+import { getDOIandTitle } from './pdfs'
 
-const getDOIandTitle = require('./pdfs.js')
-const io = require('./io.js')
+const join = path.join
 const PouchDB = require('pouchdb')
 const _ = require('lodash')
 

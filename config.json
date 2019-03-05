@@ -3,7 +3,7 @@
   "move": false,
   "outputDirectory": "/Users/wgillis/db-hms/library/floop",
   "naming": ["title", "journal", "year"],
-  "scanEvery": 0.1,
+  "scanEvery": 5,
   "dbDirectory": "/Users/wgillis/.floop",
   "removeSpaces": false
 }
