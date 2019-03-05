@@ -18,15 +18,21 @@ function scanFolder (folder) {
   return items
 }
 
-function updateVersion (fname, version = 1) {
+async function updateVersion (fname, version = 1) {
   let ext = path.extname(fname)
   let base = path.basename(fname, ext)
   let newFname = join(path.dirname(fname), base + `.${version}${ext}`)
   if (!fs.existsSync(newFname)) {
     return newFname
+  } else if (await checkHash(fname, newFname)) {
+    return newFname
   } else {
     return updateVersion(fname, version + 1)
   }
+}
+
+async function checkHash (f1, f2) {
+  return await md5(f1) === await md5(f2)
 }
 
 // moves file to new directory, and makes the directory in case it doesn't exist
@@ -38,9 +44,7 @@ async function moveItem (from, to) {
   }
   if (fs.existsSync(to)) {
     // continue in HERE
-    let fromHash = md5(from)
-    let toHash = md5(to)
-    if (await fromHash !== await toHash) {
+    if (!await checkHash(from, to)) {
       // update `to` filename
       to = updateVersion(to)
     } else {

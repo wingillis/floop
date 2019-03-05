@@ -3,16 +3,46 @@ tr.shade
   td {{ pdf.title }}
   td {{ pdf.journal }}
   td {{ authors }}
-  td {{ pdf.tags.join(', ')}}
+  td(v-on:dblclick="edit")
+    div(v-if="editing")
+      textarea(v-model="tags", v-on:keydown.enter="saveAndClose", cols=9)
+    div(v-else) {{ pdf.tags.join(', ')}}
 </template>
 
 <script>
 export default {
   name: 'pdf-file',
   props: ['pdf'],
+  data () {
+    return {
+      editing: false
+    }
+  },
   computed: {
     authors () {
-      return this.pdf.authors.map((v) => { return v.family }).join(', ')
+      let authors = this.pdf.authors
+      if (authors != null) {
+        return authors.map((v) => { return v.family }).join(', ')
+      } else {
+        return ''
+      }
+    },
+    tags: {
+      get () {
+        return this.pdf.tags.join(', ')
+      },
+      set (newval) {
+        this.pdf.tags = newval.split(', ')
+      }
+    }
+  },
+  methods: {
+    edit () {
+      this.editing = true
+    },
+    saveAndClose () {
+      this.editing = false
+      // send event to main process to update the database
     }
   }
 }
@@ -25,7 +55,12 @@ export default {
 
 }
 .shade:hover {
-    background-color: rgba(0, 0, 0, 0.06)
+  background-color: rgba(0, 0, 0, 0.06);
+}
 
-  }
+textarea {
+ border: 0px;
+ outline: none;
+ resize: none;
+}
 </style>
