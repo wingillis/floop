@@ -37,6 +37,10 @@ async function checkHash (f1, f2) {
 
 // moves file to new directory, and makes the directory in case it doesn't exist
 async function moveItem (from, to, move = false) {
+  // if they're the same, don't move
+  if (from === to) {
+    return to
+  }
   let toDir = path.dirname(to)
   // make the copy directory
   if (!fs.existsSync(toDir)) {

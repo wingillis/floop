@@ -90,6 +90,7 @@ ipcMain.on('update-tag', async (event, arg) => {
   let doc = arg.doc
   // move file around based on tags
   doc = await worker.moveToTaggedFolders(doc, userConfig)
+  mainWindow.webContents.send('update-pdf', doc)
   await database.put(doc)
 })
 /**

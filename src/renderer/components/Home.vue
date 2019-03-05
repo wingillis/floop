@@ -34,6 +34,15 @@ export default {
     this.$electron.ipcRenderer.on('file-update', (event, args) => {
       this.pdfs = args
     })
+    this.$on('update-pdf', (v) => {
+      this.pdfs = this.pdfs.map((x) => {
+        if (x._id === v._id) {
+          return v
+        } else {
+          return x
+        }
+      })
+    })
   }
 }
 </script>

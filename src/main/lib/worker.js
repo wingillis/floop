@@ -115,12 +115,14 @@ async function moveToTaggedFolders (pdf, config) {
     })
   }
   if (allPaths.length > 1) {
-    let links = await allPaths.slice(1).map(async (v) => {
-      return io.linkItem(newPath, v)
+    let links = allPaths.slice(1).map(async (v) => {
+      let pth = await io.linkItem(newPath, v)
+      return pth
     })
     pdf.secondaryPaths = links
   }
   pdf.tags = newTags
+  pdf.path = newPath
   // TODO: handle hierarchical tags
   return pdf
 }

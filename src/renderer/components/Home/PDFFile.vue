@@ -49,6 +49,10 @@ export default {
     saveTag () {
       this.editing = false
       // send event to main process to update the database
+      this.$electron.ipcRenderer.once('update-pdf', (event, arg) => {
+        this.$emit('update-pdf', arg)
+        // this.pdf = arg
+      })
       this.$electron.ipcRenderer.send('update-tag', {doc: this.pdf, oldTag: this.oldTag})
     }
   }
