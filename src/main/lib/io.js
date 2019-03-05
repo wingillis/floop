@@ -18,16 +18,16 @@ function scanFolder (folder) {
   return items
 }
 
-async function updateVersion (fname, version = 1) {
+async function updateVersion (fname, comparator, version = 1) {
   let ext = path.extname(fname)
   let base = path.basename(fname, ext)
   let newFname = join(path.dirname(fname), base + `.${version}${ext}`)
   if (!fs.existsSync(newFname)) {
     return newFname
-  } else if (await checkHash(fname, newFname)) {
+  } else if (await checkHash(comparator, newFname)) {
     return newFname
   } else {
-    return updateVersion(fname, version + 1)
+    return updateVersion(fname, comparator, version + 1)
   }
 }
 
@@ -47,12 +47,12 @@ async function moveItem (from, to, move = false) {
   if (fs.existsSync(to) && !await checkHash(from, to)) {
     // if the hash's aren't the same, they are different files, so we should
     // update the version number
-    to = await updateVersion(to)
+    to = await updateVersion(to, from)
     if (fs.existsSync(to)) {
       // delete file and recopy
       fs.unlinkSync(to)
     }
-  } else {
+  } else if (fs.existsSync(to)) {
     fs.unlinkSync(to)
   }
   // move file if move flag set to true else copy it
@@ -64,6 +64,27 @@ async function moveItem (from, to, move = false) {
     fs.copyFileSync(from, to, fs.constants.COPYFILE_EXCL)
     // console.log(`copied file ${from} to ${to}`)
   }
+  return to
+}
+
+/**
+ * makes a symlink of one file in a new directory, checking to make sure that
+ * the checksum matches if overwriting a file. Otherwise, it will update the
+ * filename
+ * @param {PathLike} linked the file to make a symlink with
+ * @param {PathLike} linkPath the new path where the symlink will reside
+ */
+async function linkItem (linked, linkPath) {
+  let toDir = path.dirname(linkPath)
+  if (!fs.existsSync(toDir)) {
+    fs.mkdirSync(toDir, { recursive: true })
+  }
+  // if there is a linkPath file update name
+  if (fs.existsSync(linkPath) && !await checkHash(linked, linkPath)) {
+    linkPath = await updateVersion(linkPath, linked)
+  }
+  fs.linkSync(linked, linkPath)
+  return linkPath
 }
 
 // rename file based on keys to call from specified in the json config
@@ -85,5 +106,6 @@ function renameFromSchema (data, schema, removeSpaces = false) {
 export default {
   scanFolder,
   moveItem,
+  linkItem,
   renameFromSchema
 }

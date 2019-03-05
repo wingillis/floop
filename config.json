@@ -1,9 +1,9 @@
 {
   "watch": "/Users/wgillis/db-hms/lab-datta/papers to read",
-  "move": false,
+  "move": true,
   "outputDirectory": "/Users/wgillis/db-hms/library/floop",
   "naming": ["title", "journal", "year"],
-  "scanEvery": 5,
+  "scanEvery": 10,
   "dbDirectory": "/Users/wgillis/.floop",
   "removeSpaces": false
 }

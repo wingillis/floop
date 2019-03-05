@@ -6,7 +6,7 @@ tr.shade
   //- tag section
   td(v-on:dblclick="edit")
     div(v-if="editing")
-      textarea(v-model="tags", v-on:keydown.enter="saveTag", cols=9)
+      textarea#tagedit(v-model="tags", v-on:keydown.enter="saveTag", cols=9)
     div(v-else) {{ pdf.tags.join(', ')}}
 </template>
 
@@ -16,7 +16,8 @@ export default {
   props: ['pdf'],
   data () {
     return {
-      editing: false
+      editing: false,
+      oldTag: this.pdf.tags.slice()
     }
   },
   computed: {
@@ -40,11 +41,15 @@ export default {
   methods: {
     edit () {
       this.editing = true
+      this.$nextTick(() => {
+        document.getElementById('tagedit').focus()
+        document.getElementById('tagedit').select()
+      })
     },
     saveTag () {
       this.editing = false
       // send event to main process to update the database
-      // this.$electron.ipcRenderer.send('update-tag', this.pdf)
+      this.$electron.ipcRenderer.send('update-tag', {doc: this.pdf, oldTag: this.oldTag})
     }
   }
 }

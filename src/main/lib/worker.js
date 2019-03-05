@@ -61,17 +61,17 @@ async function processFile (fname, config) {
     // move to the untagged dir
     data.path = join(config.outputDirectory, 'untagged', newName)
     data.tags = ['untagged']
-    io.moveItem(fname, data.path, config.move)
+    data.path = await io.moveItem(fname, data.path, config.move)
   } else if (data.doi == null && data.title == null) {
     // move these files to an 'unprocessed' folder
     data.path = join(config.outputDirectory, 'unprocessed', path.basename(fname))
     data.tags = ['unprocessed']
-    io.moveItem(fname, data.path, config.move)
+    data.path = await io.moveItem(fname, data.path, config.move)
   } else {
     let newName = io.renameFromSchema(data, ['title'], config.removeSpaces)
     data.path = join(config.outputDirectory, 'untagged', newName)
     data.tags = ['untagged']
-    io.moveItem(fname, data.path, config.move)
+    data.path = await io.moveItem(fname, data.path, config.move)
   }
   if (data.title == null) {
     data.title = path.basename(data.path.toLowerCase(), '.pdf')
@@ -100,8 +100,34 @@ async function processFolder (config) {
   return fileData
 }
 
+// move pdfs that have been re-tagged to new folders reflecting the tags
+async function moveToTaggedFolders (pdf, config) {
+  let newTags = pdf.tags.filter((v) => { return v !== '' })
+  let allPaths = newTags.map((v) => {
+    return join(config.outputDirectory, v, path.basename(pdf.path))
+  })
+  // set one tag to be the main directory, move file from original directory
+  let newPath = await io.moveItem(pdf.path, allPaths[0], true)
+  // remove link from secondary directories
+  if (pdf.secondaryPaths != null) {
+    pdf.secondaryPaths.forEach((v) => {
+      fs.unlinkSync(v)
+    })
+  }
+  if (allPaths.length > 1) {
+    let links = await allPaths.slice(1).map(async (v) => {
+      return io.linkItem(newPath, v)
+    })
+    pdf.secondaryPaths = links
+  }
+  pdf.tags = newTags
+  // TODO: handle hierarchical tags
+  return pdf
+}
+
 export default {
   setupDB,
   processFile,
-  processFolder
+  processFolder,
+  moveToTaggedFolders
 }

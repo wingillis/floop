@@ -27,7 +27,10 @@ function createWindow () {
   mainWindow = new BrowserWindow({
     height: 563,
     useContentSize: true,
-    width: 1200
+    width: 1200,
+    webPreferences: {
+      nodeIntegration: true
+    }
   })
 
   mainWindow.loadURL(winURL)
@@ -84,8 +87,10 @@ ipcMain.on('update-tag', async (event, arg) => {
   // update doc in the database
   // arg should contain all relevant metadata to successfully update the
   // doc
-  await database.put({_id: arg._id, _rev: arg._rev, tags: arg.tags})
-  // now move file around based on tags
+  let doc = arg.doc
+  // move file around based on tags
+  doc = await worker.moveToTaggedFolders(doc, userConfig)
+  await database.put(doc)
 })
 /**
  * Auto Updater
