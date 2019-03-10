@@ -11,6 +11,8 @@ tr.shade
 </template>
 
 <script>
+import { mapActions } from 'vuex'
+
 export default {
   name: 'pdf-file',
   props: ['pdf'],
@@ -50,11 +52,13 @@ export default {
       this.editing = false
       // send event to main process to update the database
       this.$electron.ipcRenderer.once('update-pdf', (event, arg) => {
-        this.$store.commit('updatePdf', arg)
-        // this.pdf = arg
+        this.updatePdf(this.arg)
       })
-      this.$electron.ipcRenderer.send('update-tag', {doc: this.pdf, oldTag: this.oldTag})
-    }
+      this.$electron.ipcRenderer.send('update-tag', this.pdf)
+    },
+    ...mapActions([
+      'updatePdf'
+    ])
   }
 }
 </script>

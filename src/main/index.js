@@ -78,10 +78,10 @@ ipcMain.on('refresh', async (event, arg) => {
   }
 })
 
-ipcMain.on('load-db', async (event, arg) => {
-  let files = await database.allDocs({include_docs: true})
-  event.sender.send('on-load-db', files.rows)
-})
+// ipcMain.on('load-db', async (event, arg) => {
+//   let files = await database.allDocs({include_docs: true})
+//   event.sender.send('on-load-db', files.rows)
+// })
 
 async function updateFiles (config) {
   if (userConfig != null) {
@@ -94,13 +94,11 @@ async function updateFiles (config) {
 
 ipcMain.on('update-tag', async (event, arg) => {
   // update doc in the database
-  // arg should contain all relevant metadata to successfully update the
-  // doc
-  let doc = arg.doc
+  // arg should contain all relevant metadata to successfully update the doc
+  let doc = arg
   // move file around based on tags
   doc = await worker.moveToTaggedFolders(doc, userConfig)
   mainWindow.webContents.send('update-pdf', doc)
-  await database.put(doc)
 })
 /**
  * Auto Updater

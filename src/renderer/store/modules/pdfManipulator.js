@@ -24,6 +24,9 @@ const mutations = {
   addPdfs (state, pdfs) {
     state.pdfs.push(...pdfs)
   },
+  clearPdfs (state) {
+    state.pdfs = []
+  },
   addConfig (state, config) {
     state.config = config
   },
@@ -46,10 +49,18 @@ const actions = {
   addConfig ({ commit }, config) {
     commit('addConfig', config)
   },
+  updatePdf ({ commit, state }, pdf) {
+    commit('updatePdf', pdf)
+    state.db.put(pdf)
+  },
   async initDB ({ commit, state }, dbPath) {
     if (state.db == null) {
       if (!fs.existsSync(dbPath)) fs.mkdirSync(dbPath, { recursive: true })
-      commit('addDB', new PouchDB(join(dbPath, 'pdf-files.db')))
+      let db = new PouchDB(join(dbPath, 'pdf-files.db'))
+      commit('addDB', db)
+      // now load the pdfs
+      let files = await db.allDocs({include_docs: true})
+      commit('addPdfs', files.rows)
     }
     return true
   },
