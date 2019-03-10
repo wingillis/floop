@@ -79,13 +79,6 @@ async function processFile (fname, config) {
   return data
 }
 
-function setupDB (config) {
-  if (!fs.existsSync(config.dbDirectory)) {
-    fs.mkdirSync(config.dbDirectory)
-  }
-  return new PouchDB(join(config.dbDirectory, 'pdf-files.db'))
-}
-
 async function processFolder (config) {
   let files = io.scanFolder(config.watch)
   // this makes the api calls async and faster

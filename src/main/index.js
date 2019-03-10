@@ -4,6 +4,7 @@ import { app, BrowserWindow, ipcMain } from 'electron'
 import path from 'path'
 import fs from 'fs'
 import worker from './lib/worker'
+import store from '../renderer/store'
 
 /**
  * Set `__static` path to static files in production
@@ -40,6 +41,18 @@ function createWindow () {
     clearInterval(workerID)
     database.close()
   })
+
+  let configPath = path.resolve(path.join(__dirname, '..', '..', 'config.json'))
+  userConfig = JSON.parse(fs.readFileSync(configPath))
+
+  store.dispatch('addConfig', userConfig)
+  store.dispatch('initDB', userConfig.dbDirectory)
+
+  // start scanning process
+  workerID = setInterval(updateFiles, userConfig.scanEvery * 1000 * 60, userConfig)
+  // run `updateFiles` once on app opening
+  updateFiles(userConfig)
+
 }
 
 app.on('ready', createWindow)
@@ -47,7 +60,7 @@ app.on('ready', createWindow)
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit()
-    database.close()
+    store.dispatch('closeDB')
   }
 })
 
@@ -66,10 +79,6 @@ ipcMain.on('refresh', async (event, arg) => {
 })
 
 ipcMain.on('load-db', async (event, arg) => {
-  let configPath = path.resolve(path.join(__dirname, '..', '..', 'config.json'))
-  userConfig = JSON.parse(fs.readFileSync(configPath))
-  database = worker.setupDB(userConfig)
-  workerID = setInterval(updateFiles, userConfig.scanEvery * 1000 * 60, userConfig)
   let files = await database.allDocs({include_docs: true})
   event.sender.send('on-load-db', files.rows)
 })

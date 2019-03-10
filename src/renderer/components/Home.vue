@@ -16,32 +16,22 @@ div
 
 <script>
 import PDFFile from './Home/PDFFile'
+import { mapState } from 'vuex'
 
 export default {
   name: 'home',
   components: { 'pdf-file': PDFFile },
-  data () {
-    return {
-      pdfs: []
-    }
-  },
+  computed: mapState([
+    'pdfs'
+  ]),
   mounted () {
-    this.$electron.ipcRenderer.on('on-load-db', (event, args) => {
+    this.$electron.ipcRenderer.once('on-load-db', (event, args) => {
       // assume args is the pdfs
-      this.pdfs = args
+      this.$store.commit('addPdfs', args)
     })
     this.$electron.ipcRenderer.send('load-db')
     this.$electron.ipcRenderer.on('file-update', (event, args) => {
-      this.pdfs = args
-    })
-    this.$on('update-pdf', (v) => {
-      this.pdfs = this.pdfs.map((x) => {
-        if (x._id === v._id) {
-          return v
-        } else {
-          return x
-        }
-      })
+      this.$store.commit('addPdfs', args)
     })
   }
 }
