@@ -1,6 +1,7 @@
 import PouchDB from 'pouchdb'
 import fs from 'fs'
 import { join } from 'path'
+import worker from '../../../main/lib/worker'
 
 const state = {
   pdfs: [],
@@ -46,12 +47,19 @@ const actions = {
   addPdf ({ commit }, pdf) {
     commit('addPdf', pdf)
   },
+  async addPdfs ({ commit, state }, fileData) {
+    await state.db.bulkDocs(fileData)
+    let files = await state.db.allDocs({include_docs: true})
+    commit('clearPdfs')
+    commit('addPdfs', files.rows)
+  },
   addConfig ({ commit }, config) {
     commit('addConfig', config)
   },
-  updatePdf ({ commit, state }, pdf) {
-    commit('updatePdf', pdf)
-    state.db.put(pdf)
+  async updatePdf ({ commit, state }, pdf) {
+    let doc = await worker.moveToTaggedFolders(pdf, state.config)
+    commit('updatePdf', doc)
+    state.db.put(doc)
   },
   async initDB ({ commit, state }, dbPath) {
     if (state.db == null) {

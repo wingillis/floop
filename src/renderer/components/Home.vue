@@ -29,10 +29,6 @@ export default {
       // assume args is the pdfs
       this.$store.commit('addPdfs', args)
     })
-    this.$electron.ipcRenderer.send('load-db')
-    this.$electron.ipcRenderer.on('file-update', (event, args) => {
-      this.$store.commit('addPdfs', args)
-    })
   }
 }
 </script>

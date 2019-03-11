@@ -51,10 +51,7 @@ export default {
     saveTag () {
       this.editing = false
       // send event to main process to update the database
-      this.$electron.ipcRenderer.once('update-pdf', (event, arg) => {
-        this.updatePdf(this.arg)
-      })
-      this.$electron.ipcRenderer.send('update-tag', this.pdf)
+      this.updatePdf(this.arg)
     },
     ...mapActions([
       'updatePdf'

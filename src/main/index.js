@@ -52,7 +52,6 @@ function createWindow () {
   workerID = setInterval(updateFiles, userConfig.scanEvery * 1000 * 60, userConfig)
   // run `updateFiles` once on app opening
   updateFiles(userConfig)
-
 }
 
 app.on('ready', createWindow)
@@ -86,20 +85,10 @@ ipcMain.on('refresh', async (event, arg) => {
 async function updateFiles (config) {
   if (userConfig != null) {
     let fileData = await worker.processFolder(config)
-    await database.bulkDocs(fileData)
-    let files = await database.allDocs({include_docs: true})
-    mainWindow.webContents.send('file-update', files.rows)
+    store.dispatch('addPdfs', fileData)
   }
 }
 
-ipcMain.on('update-tag', async (event, arg) => {
-  // update doc in the database
-  // arg should contain all relevant metadata to successfully update the doc
-  let doc = arg
-  // move file around based on tags
-  doc = await worker.moveToTaggedFolders(doc, userConfig)
-  mainWindow.webContents.send('update-pdf', doc)
-})
 /**
  * Auto Updater
  *
