@@ -56,6 +56,7 @@
   },
   "dependencies": {
     "axios": "^0.18.0",
+    "fuse.js": "^3.4.4",
     "lodash": "^4.17.11",
     "md5-file": "^4.0.0",
     "pdfjs-dist": "^2.0.943",
@@ -71,7 +72,7 @@
     "vuex-electron": "^1.0.0"
   },
   "devDependencies": {
-    "ajv": "^6.5.0",
+    "ajv": "^6.10.0",
     "babel-core": "^6.26.3",
     "babel-eslint": "^8.2.3",
     "babel-loader": "^7.1.4",
@@ -89,7 +90,7 @@
     "css-loader": "^0.28.11",
     "del": "^3.0.0",
     "devtron": "^1.4.0",
-    "electron": "^4.0.6",
+    "electron": "^4.0.8",
     "electron-builder": "^20.19.2",
     "electron-debug": "^1.5.0",
     "electron-devtools-installer": "^2.2.4",

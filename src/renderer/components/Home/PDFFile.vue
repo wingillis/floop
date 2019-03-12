@@ -7,7 +7,7 @@ tr.shade
   td(v-on:dblclick="edit")
     div(v-if="editing")
       textarea#tagedit(v-model="tags", v-on:keydown.enter="saveTag", cols=9)
-    div(v-else) {{ pdf.tags.join(', ')}}
+    div(v-else) {{ tags }}
 </template>
 
 <script>
@@ -19,7 +19,7 @@ export default {
   data () {
     return {
       editing: false,
-      oldTag: this.pdf.tags.slice()
+      tagVar: this.pdf.tags.slice()
     }
   },
   computed: {
@@ -33,10 +33,10 @@ export default {
     },
     tags: {
       get () {
-        return this.pdf.tags.join(', ')
+        return this.tagVar.join(', ')
       },
       set (newval) {
-        this.pdf.tags = newval.split(', ')
+        this.tagVar = newval.split(', ')
       }
     }
   },
@@ -51,7 +51,9 @@ export default {
     saveTag () {
       this.editing = false
       // send event to main process to update the database
-      this.updatePdf(this.arg)
+      let pdf = Object.assign({}, this.pdf)
+      pdf.tags = this.tagVar
+      this.updatePdf(pdf)
     },
     ...mapActions([
       'updatePdf'

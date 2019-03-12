@@ -7,7 +7,6 @@ import io from './io'
 import { getDOIandTitle } from './pdfs'
 
 const join = path.join
-const PouchDB = require('pouchdb')
 const _ = require('lodash')
 
 // link to the crossref api
@@ -121,7 +120,6 @@ async function moveToTaggedFolders (pdf, config) {
 }
 
 export default {
-  setupDB,
   processFile,
   processFolder,
   moveToTaggedFolders

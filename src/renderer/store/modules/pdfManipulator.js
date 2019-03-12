@@ -3,9 +3,10 @@ import fs from 'fs'
 import { join } from 'path'
 import worker from '../../../main/lib/worker'
 
+let db = null
+
 const state = {
   pdfs: [],
-  db: null,
   config: null
 }
 
@@ -30,12 +31,6 @@ const mutations = {
   },
   addConfig (state, config) {
     state.config = config
-  },
-  addDB (state, db) {
-    state.db = db
-  },
-  closeDB (state) {
-    state.db = null
   }
 }
 
@@ -47,11 +42,13 @@ const actions = {
   addPdf ({ commit }, pdf) {
     commit('addPdf', pdf)
   },
-  async addPdfs ({ commit, state }, fileData) {
-    await state.db.bulkDocs(fileData)
-    let files = await state.db.allDocs({include_docs: true})
-    commit('clearPdfs')
-    commit('addPdfs', files.rows)
+  async addPdfs ({ commit }, fileData) {
+    let inserts = await db.bulkDocs(fileData)
+    let files = await inserts.map(async (v) => {
+      let doc = await db.get(v._id)
+      return doc
+    })
+    commit('addPdfs', files)
   },
   addConfig ({ commit }, config) {
     commit('addConfig', config)
@@ -59,23 +56,22 @@ const actions = {
   async updatePdf ({ commit, state }, pdf) {
     let doc = await worker.moveToTaggedFolders(pdf, state.config)
     commit('updatePdf', doc)
-    state.db.put(doc)
+    db.put(doc)
   },
   async initDB ({ commit, state }, dbPath) {
-    if (state.db == null) {
+    if (db == null) {
       if (!fs.existsSync(dbPath)) fs.mkdirSync(dbPath, { recursive: true })
-      let db = new PouchDB(join(dbPath, 'pdf-files.db'))
-      commit('addDB', db)
+      db = new PouchDB(join(dbPath, 'pdf-files.db'))
       // now load the pdfs
       let files = await db.allDocs({include_docs: true})
       commit('addPdfs', files.rows)
     }
     return true
   },
-  closeDB ({ commit, state }) {
-    if (state.db != null) {
-      state.db.close()
-      commit('closeDB')
+  closeDB (context) {
+    if (db != null) {
+      db.close()
+      db = null
     }
   }
 }

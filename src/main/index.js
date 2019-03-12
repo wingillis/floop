@@ -1,6 +1,4 @@
-'use strict'
-
-import { app, BrowserWindow, ipcMain } from 'electron'
+import { app, BrowserWindow } from 'electron'
 import path from 'path'
 import fs from 'fs'
 import worker from './lib/worker'
@@ -69,13 +67,13 @@ app.on('activate', () => {
   }
 })
 
-ipcMain.on('refresh', async (event, arg) => {
-  // check files
-  if (userConfig != null) {
-    let fileData = await worker.processFolder(userConfig)
-    database.bulkDocs(fileData)
-  }
-})
+// ipcMain.on('refresh', async (event, arg) => {
+//   // check files
+//   if (userConfig != null) {
+//     let fileData = await worker.processFolder(userConfig)
+//     database.bulkDocs(fileData)
+//   }
+// })
 
 // ipcMain.on('load-db', async (event, arg) => {
 //   let files = await database.allDocs({include_docs: true})
@@ -83,10 +81,8 @@ ipcMain.on('refresh', async (event, arg) => {
 // })
 
 async function updateFiles (config) {
-  if (userConfig != null) {
-    let fileData = await worker.processFolder(config)
-    store.dispatch('addPdfs', fileData)
-  }
+  let fileData = await worker.processFolder(config)
+  store.dispatch('addPdfs', fileData)
 }
 
 /**
