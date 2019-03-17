@@ -58,13 +58,17 @@ const actions = {
     commit('updatePdf', doc)
     db.put(doc)
   },
-  async initDB ({ commit, state }, dbPath) {
+  async mergeDbWithVuex ({ commit, state }, dbEntries) {
+    /* make sure the revisions for each file entry from the database
+    and the electron store line up */
+  },
+  async initDB ({ dispatch }, dbPath) {
     if (db == null) {
       if (!fs.existsSync(dbPath)) fs.mkdirSync(dbPath, { recursive: true })
       db = new PouchDB(join(dbPath, 'pdf-files.db'))
       // now load the pdfs
-      let files = await db.allDocs({include_docs: true})
-      commit('addPdfs', files.rows)
+      let files = await db.allDocs()
+      dispatch('mergeDbWithVuex', files.rows)
     }
     return true
   },

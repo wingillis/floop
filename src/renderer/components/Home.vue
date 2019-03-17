@@ -5,15 +5,15 @@ div
       tr
         th
           span#title-bar Title
-          input(v-model="searchStr", placeholder="filter titles", type="text")
+          input(v-model="searchTitle", placeholder="filter titles", type="text")
         th Journal
         th Authors
         th Tags
     tbody
-      pdf-file(v-if="!isSearching",
-               v-for="pdf in pdfs",
-               v-bind:pdf="pdf.doc",
-               v-bind:key="pdf._id")
+      div(v-if="!isSearching")
+        pdf-file(v-for="pdf in pdfs",
+                 v-bind:pdf="pdf.doc",
+                 v-bind:key="pdf._id")
       div(v-else)
         pdf-file(v-for="pdf in pdfFilter",
                  v-bind:pdf="pdf.doc",
@@ -26,7 +26,9 @@ import PDFFile from './Home/PDFFile'
 import Fuse from 'fuse.js'
 import { mapState } from 'vuex'
 
-const options = {
+// TODO: cache Fuse searcher up here somehow
+
+const titleOptions = {
   keys: ['doc.title']
 }
 
@@ -46,12 +48,12 @@ export default {
     isSearching () {
       return this.search != null && this.search.length !== 0
     },
-    searchStr: {
+    searchTitle: {
       get () {
         return this.search
       },
       set (newVal) {
-        let fuse = new Fuse(this.pdfs, options)
+        let fuse = new Fuse(this.pdfs, titleOptions)
         this.pdfFilter = fuse.search(newVal)
         this.search = newVal
       }
