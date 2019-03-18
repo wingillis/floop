@@ -48,13 +48,15 @@ export default {
     isSearching () {
       return this.search != null && this.search.length !== 0
     },
+    searchableTitle () {
+      return new Fuse(this.pdfs, titleOptions)
+    },
     searchTitle: {
       get () {
         return this.search
       },
       set (newVal) {
-        let fuse = new Fuse(this.pdfs, titleOptions)
-        this.pdfFilter = fuse.search(newVal)
+        this.pdfFilter = this.searchableTitle.search(newVal)
         this.search = newVal
       }
     }

@@ -51,9 +51,7 @@ export default {
     saveTag () {
       this.editing = false
       // send event to main process to update the database
-      let pdf = Object.assign({}, this.pdf)
-      pdf.tags = this.tagVar
-      this.updatePdf(pdf)
+      this.updatePdf({'pdf': this.pdf, 'tags': this.tagVar})
     },
     ...mapActions([
       'updatePdf'

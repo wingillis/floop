@@ -31,10 +31,6 @@ const mutations = {
 }
 
 const actions = {
-  someAsyncTask ({ commit }) {
-    // do something async
-    // commit('INCREMENT_MAIN_COUNTER')
-  },
   addPdf ({ commit }, pdf) {
     commit('addPdf', pdf)
   },
@@ -44,9 +40,15 @@ const actions = {
   addConfig ({ commit }, config) {
     commit('addConfig', config)
   },
-  async updatePdf ({ commit, state }, pdf) {
+  async updatePdf ({ commit, state }, { pdf, tags }) {
+    pdf.tags = tags
     let doc = await worker.moveToTaggedFolders(pdf, state.config)
     commit('updatePdf', doc)
+  },
+  async updateFiles ({ commit, state }) {
+    let config = state.config
+    let fileData = await worker.processFolder(config)
+    commit('addPdfs', fileData)
   }
 }
 

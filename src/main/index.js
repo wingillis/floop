@@ -44,12 +44,11 @@ function createWindow () {
   userConfig = JSON.parse(fs.readFileSync(configPath))
 
   store.dispatch('addConfig', userConfig)
-  store.dispatch('initDB', userConfig.dbDirectory)
 
   // start scanning process
-  workerID = setInterval(updateFiles, userConfig.scanEvery * 1000 * 60, userConfig)
+  workerID = setInterval(() => { store.dispatch('updateFiles') }, userConfig.scanEvery * 1000 * 60)
   // run `updateFiles` once on app opening
-  updateFiles(userConfig)
+  store.dispatch('updateFiles')
 }
 
 app.on('ready', createWindow)
@@ -57,7 +56,6 @@ app.on('ready', createWindow)
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit()
-    store.dispatch('closeDB')
   }
 })
 
@@ -79,11 +77,6 @@ app.on('activate', () => {
 //   let files = await database.allDocs({include_docs: true})
 //   event.sender.send('on-load-db', files.rows)
 // })
-
-async function updateFiles (config) {
-  let fileData = await worker.processFolder(config)
-  store.dispatch('addPdfs', fileData)
-}
 
 /**
  * Auto Updater
