@@ -1,9 +1,5 @@
-import PouchDB from 'pouchdb'
-import fs from 'fs'
-import { join } from 'path'
 import worker from '../../../main/lib/worker'
-
-let db = null
+import { flatten, uniq } from 'lodash'
 
 const state = {
   pdfs: [],
@@ -43,12 +39,7 @@ const actions = {
     commit('addPdf', pdf)
   },
   async addPdfs ({ commit }, fileData) {
-    let inserts = await db.bulkDocs(fileData)
-    let files = await inserts.map(async (v) => {
-      let doc = await db.get(v._id)
-      return doc
-    })
-    commit('addPdfs', files)
+    commit('addPdfs', fileData)
   },
   addConfig ({ commit }, config) {
     commit('addConfig', config)
@@ -56,32 +47,36 @@ const actions = {
   async updatePdf ({ commit, state }, pdf) {
     let doc = await worker.moveToTaggedFolders(pdf, state.config)
     commit('updatePdf', doc)
-    db.put(doc)
+  }
+}
+
+const getters = {
+  authors (state) {
+    return state.pdfs.map(v => {
+      return v.authors
+    })
   },
-  async mergeDbWithVuex ({ commit, state }, dbEntries) {
-    /* make sure the revisions for each file entry from the database
-    and the electron store line up */
+  titles (state) {
+    return state.pdfs.map(v => {
+      return v.title
+    })
   },
-  async initDB ({ dispatch }, dbPath) {
-    if (db == null) {
-      if (!fs.existsSync(dbPath)) fs.mkdirSync(dbPath, { recursive: true })
-      db = new PouchDB(join(dbPath, 'pdf-files.db'))
-      // now load the pdfs
-      let files = await db.allDocs()
-      dispatch('mergeDbWithVuex', files.rows)
-    }
-    return true
+  journals (state) {
+    return state.pdfs.map(v => {
+      return v.journal
+    })
   },
-  closeDB (context) {
-    if (db != null) {
-      db.close()
-      db = null
-    }
+  uniqueTags (state) {
+    let tags = state.pdfs.map(v => {
+      return v.tags
+    })
+    return uniq(flatten(tags))
   }
 }
 
 export default {
   state,
   mutations,
-  actions
+  actions,
+  getters
 }
