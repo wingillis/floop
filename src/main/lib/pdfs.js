@@ -20,8 +20,33 @@ function searchForDOI (obj) {
   const entries = flattenEntries(obj)
 
   return entries.filter(([key, val]) => {
-    return _.isString(val) && (val.search(/doi:/) !== -1 || key.search(/doi:/) !== -1)
+    return _.isString(val) && (_.toLower(val).search(/doi:/) !== -1 || _.toLower(key).search(/doi:/) !== -1)
   })
+}
+
+/**
+ * search for DOIs in the pdf. this is mostly to accomodate science mag articles
+ * @param {pdf} data
+ */
+async function pdfDOIsearch (data) {
+  let candidates = []
+  let numPages = data.numPages
+  while (numPages > 0) {
+    let page = await data.getPage(numPages)
+    let text = await page.getTextContent()
+    candidates = text.items.filter(v => { return v.str.search(/\d{2}\.\d{4}\/science\.[a-z\d]{7}/g) !== -1 })
+    if (candidates.length > 0) break
+    numPages--
+  }
+  if (candidates.length === 0) {
+    return null
+  } else {
+    candidates = candidates.map(v => {
+      return _.toLower(v.str).match(/\d{2}\.\d{4}\/science\.[a-z\d]{7}/g)[0]
+    })
+    // console.log(candidates)
+    return _.first(_.uniq(candidates))
+  }
 }
 
 function searchForTitle (obj) {
@@ -63,7 +88,7 @@ function cleanTitles (titles) {
 // remove redundant dois from list
 function cleanDOIs (dois) {
   let matches = _.map(dois, ([key, val]) => {
-    if (key.search(/doi/) !== -1) {
+    if (_.toLower(key).search(/doi/) !== -1) {
       return val
     } else {
       let match = val.match(/doi:( )?.+\w/)
@@ -91,8 +116,8 @@ async function getDOIandTitle (fpath) {
   let doi = cleanDOIs(dois)
 
   if (doi.length === 0) {
-    doi = null
-    // console.log(md)
+    // try looking in the pdf
+    doi = await pdfDOIsearch(data)
   }
   // replace doi with PII if available
   if (title != null && title.search(/PII/) !== -1) {

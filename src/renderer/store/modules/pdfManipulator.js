@@ -1,5 +1,5 @@
 import worker from '../../../main/lib/worker'
-import { flatten, uniq } from 'lodash'
+import { flatten, uniq, first } from 'lodash'
 
 const state = {
   pdfs: [],
@@ -31,11 +31,19 @@ const mutations = {
 }
 
 const actions = {
-  addPdf ({ commit }, pdf) {
-    commit('addPdf', pdf)
+  addPdf ({ commit, getters }, pdf) {
+    if (!getters.ids.includes(pdf._id)) {
+      commit('addPdf', pdf)
+    }
   },
-  async addPdfs ({ commit }, fileData) {
-    commit('addPdfs', fileData)
+  async addPdfs ({ commit, getters }, fileData) {
+    // TODO: check if pdf is already added
+    let toUpdate = fileData.filter(v => {
+      return !getters.ids.includes(v._id)
+    })
+    if (toUpdate.length > 0) {
+      commit('addPdfs', toUpdate)
+    }
   },
   addConfig ({ commit }, config) {
     commit('addConfig', config)
@@ -47,7 +55,12 @@ const actions = {
   async updateFiles ({ commit, state }) {
     let config = state.config
     let fileData = await worker.processFolder(config)
-    commit('addPdfs', fileData)
+    let ids = uniq(fileData.map(v => { return v._id }))
+    // don't add duplicates if there are any
+    let toUpdate = ids.map(v => {
+      return first(fileData.filter(x => { return x._id === v }))
+    })
+    commit('addPdfs', toUpdate)
   }
 }
 
@@ -72,6 +85,9 @@ const getters = {
       return v.tags
     })
     return uniq(flatten(tags))
+  },
+  ids (state) {
+    return state.pdfs.map(v => { return v._id })
   }
 }
 
