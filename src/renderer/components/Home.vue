@@ -5,19 +5,16 @@ div
       tr
         th
           span#title-bar Title
-          input(v-model="searchTitle", placeholder="filter titles", type="text")
+          input(v-model="search", @keydown.esc="stopSearch",
+                placeholder="filter titles", type="text",
+                ref="inputTitleSearch")
         th Journal
         th Authors
         th Tags
     tbody
-      div(v-if="!isSearching")
-        pdf-file(v-for="pdf in pdfs",
-                 v-bind:pdf="pdf.doc",
-                 v-bind:key="pdf._id")
-      div(v-else)
-        pdf-file(v-for="pdf in pdfFilter",
-                 v-bind:pdf="pdf.doc",
-                 v-bind:key="pdf._id")
+      pdf-file(v-for="pdf in processedPdfs",
+                v-bind:pdf="pdf",
+                v-bind:key="pdf._id")
 //- if I click on a pdf, open the right sidebar
 </template>
 
@@ -29,7 +26,7 @@ import { mapState } from 'vuex'
 // TODO: cache Fuse searcher up here somehow
 
 const titleOptions = {
-  keys: ['doc.title']
+  keys: ['title']
 }
 
 export default {
@@ -38,6 +35,12 @@ export default {
     return {
       search: null,
       pdfFilter: []
+    }
+  },
+  methods: {
+    stopSearch () {
+      this.search = ''
+      this.$refs.inputTitleSearch.blur()
     }
   },
   components: { 'pdf-file': PDFFile },
@@ -51,13 +54,11 @@ export default {
     searchableTitle () {
       return new Fuse(this.pdfs, titleOptions)
     },
-    searchTitle: {
-      get () {
-        return this.search
-      },
-      set (newVal) {
-        this.pdfFilter = this.searchableTitle.search(newVal)
-        this.search = newVal
+    processedPdfs () {
+      if (this.isSearching) {
+        return this.searchableTitle.search(this.search)
+      } else {
+        return this.pdfs
       }
     }
   }

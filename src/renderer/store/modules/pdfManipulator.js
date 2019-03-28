@@ -40,9 +40,8 @@ const actions = {
   addConfig ({ commit }, config) {
     commit('addConfig', config)
   },
-  async updatePdf ({ commit, state }, { pdf, tags }) {
-    pdf.tags = tags
-    let doc = await worker.moveToTaggedFolders(pdf, state.config)
+  async updatePdf ({ commit, state }, data) {
+    let doc = await worker.updateFile(data, state.config)
     commit('updatePdf', doc)
   },
   async updateFiles ({ commit, state }) {

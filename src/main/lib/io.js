@@ -35,6 +35,15 @@ async function checkHash (f1, f2) {
   return await md5(f1) === await md5(f2)
 }
 
+/**
+ * removes unallowed characters from the title of the paper
+ * @param {string} title
+ * @returns {string} a new title with the proper characters removed
+ */
+function cleanTitle (title) {
+  return title.replace(/[/\\?%*:|"<>\n]/g, '-')
+}
+
 // moves file to new directory, and makes the directory in case it doesn't exist
 async function moveItem (from, to, move = false) {
   // if they're the same, don't move
@@ -91,7 +100,9 @@ async function linkItem (linked, linkPath) {
   return linkPath
 }
 
-// rename file based on keys to call from specified in the json config
+/** rename file based on keys to call from specified in the json config
+ * if any key is null, it gets filtered out
+ */
 function renameFromSchema (data, schema, removeSpaces = false) {
   // remove illegal filename characters
   let fname = _.join(_.filter(_.map(schema, (v) => {
@@ -100,7 +111,7 @@ function renameFromSchema (data, schema, removeSpaces = false) {
     return v != null
   }), ' - ')
   // removes illegal characters from pathname
-  fname = fname.replace(/[/\\?%*:|"<>]/g, '-') + '.pdf'
+  fname = cleanTitle(fname) + '.pdf'
   if (removeSpaces) {
     fname = fname.replace(' ', '-')
   }
@@ -111,5 +122,6 @@ export default {
   scanFolder,
   moveItem,
   linkItem,
-  renameFromSchema
+  renameFromSchema,
+  cleanTitle
 }

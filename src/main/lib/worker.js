@@ -107,10 +107,9 @@ async function moveToTaggedFolders (pdf, config) {
     })
   }
   if (allPaths.length > 1) {
-    let links = allPaths.slice(1).map(async (v) => {
-      let pth = await io.linkItem(newPath, v)
-      return pth
-    })
+    let links = await Promise.all(allPaths.slice(1).map(async v => {
+      return io.linkItem(newPath, v)
+    }))
     pdf.secondaryPaths = links
   }
   pdf.tags = newTags
@@ -119,8 +118,37 @@ async function moveToTaggedFolders (pdf, config) {
   return pdf
 }
 
+async function renameFile (pdf, config) {
+  let newName = io.renameFromSchema(pdf, config.naming, config.removeSpaces)
+  let newPath = await io.moveItem(pdf.path, join(path.dirname(pdf.path), newName))
+  pdf.path = newPath
+  pdf = await moveToTaggedFolders(pdf, config)
+  return pdf
+}
+
+function any (arr) {
+  return _.reduce(arr, (agg, v) => { return agg || v })
+}
+
+async function updateFile (data, config) {
+  let doc
+  let pdf = data.pdf
+  let newData = _.omit(data, 'pdf')
+  pdf = _.assign(pdf, newData)
+  if (_.has(newData, 'tags')) {
+    doc = await moveToTaggedFolders(pdf, config)
+  } else if (any(_.map(['title', 'journal', 'year'], x => _.has(newData, x)))) {
+    doc = await renameFile(pdf, config)
+  } else {
+    doc = pdf
+  }
+  return doc
+}
+
 export default {
   processFile,
   processFolder,
-  moveToTaggedFolders
+  moveToTaggedFolders,
+  renameFile,
+  updateFile
 }

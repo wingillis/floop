@@ -1,8 +1,8 @@
-import { app, BrowserWindow } from 'electron'
+import { app, BrowserWindow, ipcMain } from 'electron'
 import path from 'path'
 import fs from 'fs'
-import worker from './lib/worker'
 import store from '../renderer/store'
+import { exec } from 'child_process'
 
 /**
  * Set `__static` path to static files in production
@@ -63,6 +63,10 @@ app.on('activate', () => {
   if (mainWindow === null) {
     createWindow()
   }
+})
+
+ipcMain.on('open', (event, arg) => {
+  exec(`open "${arg}"`)
 })
 
 // ipcMain.on('refresh', async (event, arg) => {
