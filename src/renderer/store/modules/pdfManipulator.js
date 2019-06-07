@@ -6,6 +6,7 @@ const state = {
   config: null
 }
 
+// TODO: update pdfs to be an object where the md5 hash is the key (to prevent dupes)
 const mutations = {
   updatePdf (state, pdf) {
     state.pdfs = state.pdfs.map((x) => {
