@@ -12,7 +12,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "lodash": "^4.17.11",
+    "lodash": "^4.17.19",
     "md5-file": "^4.0.0",
     "pdfjs-dist": "^2.0.943",
     "pouchdb": "^7.0.0",
